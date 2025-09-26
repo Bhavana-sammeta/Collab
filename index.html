@@ -1,0 +1,239 @@
+// App.js
+
+import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
+
+/* 
+  You can also move this into a separate CSS file and import it, but here it's embedded.
+  This style will be injected into document head when the component mounts.
+*/
+const globalStyles = `
+:root {
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 60px;
+  --primary-color: #2c3e50;
+  --light-bg: #f5f5f5;
+  --text-color: #333;
+}
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  color: var(--text-color);
+}
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+.sidebar {
+  background: var(--primary-color);
+  color: white;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+.sidebar.open {
+  width: var(--sidebar-width);
+}
+.sidebar.closed {
+  width: var(--sidebar-collapsed-width);
+}
+.sidebar-logo {
+  margin: 20px;
+  font-size: 1.4em;
+}
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.sidebar-menu li {
+  padding: 15px 20px;
+  cursor: pointer;
+}
+.sidebar-menu li:hover {
+  background: rgba(255,255,255,0.1);
+}
+.main-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.header {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  background: white;
+  border-bottom: 1px solid #ddd;
+}
+.btn-toggle {
+  font-size: 1.5em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 15px;
+}
+.header-title {
+  flex: 1;
+  margin: 0;
+}
+.header-right {
+  /* for user info, etc */
+}
+.content-area {
+  padding: 20px;
+  background: var(--light-bg);
+  flex: 1;
+  overflow-y: auto;
+}
+.dashboard .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+.stat-box {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+.stat-label {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.orders-table th, .orders-table td {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+.orders-table th {
+  background: #eee;
+}
+`;
+
+// Utility: inject the CSS into document head (once)
+function injectGlobalStyles(cssText) {
+  const styleEl = document.createElement('style');
+  styleEl.textContent = cssText;
+  document.head.appendChild(styleEl);
+}
+
+function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // On mount, inject styles
+  React.useEffect(() => {
+    injectGlobalStyles(globalStyles);
+  }, []);
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  return (
+    <div className="app-container">
+      <Sidebar isOpen={sidebarOpen} />
+      <div className={`main-section ${sidebarOpen ? '' : 'collapsed'}`}>
+        <Header onToggleSidebar={toggleSidebar} />
+        <div className="content-area">
+          <Dashboard />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Sidebar({ isOpen }) {
+  return (
+    <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+      <h2 className="sidebar-logo">Restaurant Admin</h2>
+      <ul className="sidebar-menu">
+        <li>Dashboard</li>
+        <li>Orders</li>
+        <li>Menu</li>
+        <li>Reservations</li>
+        <li>Customers</li>
+        <li>Settings</li>
+      </ul>
+    </div>
+  );
+}
+
+function Header({ onToggleSidebar }) {
+  return (
+    <div className="header">
+      <button className="btn-toggle" onClick={onToggleSidebar}>
+        ☰
+      </button>
+      <h1 className="header-title">Dashboard</h1>
+      <div className="header-right">
+        <span>Admin</span>
+      </div>
+    </div>
+  );
+}
+
+function Dashboard() {
+  const stats = [
+    { label: 'Total Orders', value: 128 },
+    { label: 'Pending', value: 12 },
+    { label: 'Completed', value: 106 },
+    { label: 'Revenue', value: '$3,200' },
+  ];
+
+  const recentOrders = [
+    { id: '#101', table: 5, status: 'Completed', amount: '$45' },
+    { id: '#102', table: 2, status: 'Pending', amount: '$22' },
+    { id: '#103', table: 1, status: 'Completed', amount: '$55' },
+    { id: '#104', table: 3, status: 'Cancelled', amount: '$0' },
+  ];
+
+  return (
+    <div className="dashboard">
+      <div className="stats-grid">
+        {stats.map((s, idx) => (
+          <div key={idx} className="stat-box">
+            <div className="stat-label">{s.label}</div>
+            <div className="stat-value">{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="recent-section">
+        <h3>Recent Orders</h3>
+        <table className="orders-table">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Table</th>
+              <th>Status</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentOrders.map((o, i) => (
+              <tr key={i}>
+                <td>{o.id}</td>
+                <td>{o.table}</td>
+                <td>{o.status}</td>
+                <td>{o.amount}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Mount the React app
+ReactDOM.render(<App />, document.getElementById('root'));
